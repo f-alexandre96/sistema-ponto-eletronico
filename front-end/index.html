@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Ponto Eletrônico</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .tab.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        .content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .status.bloqueado {
+            background: #ff4444;
+            color: white;
+        }
+
+        .status.ativo {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 15px;
+            font-size: 14px;
+            background: #2196F3;
+        }
+
+        .btn-small:hover {
+            background: #0b7dda;
+        }
+
+        .clock {
+            text-align: center;
+            font-size: 3em;
+            color: #667eea;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Sistema de Ponto Eletrônico</h1>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('registrar')">Registrar Ponto</button>
+            <button class="tab" onclick="showTab('cadastro')">Cadastrar Funcionário</button>
+            <button class="tab" onclick="showTab('rh')">Painel RH</button>
+        </div>
+
+        <!-- ABA: REGISTRAR PONTO -->
+        <div id="registrar" class="content active">
+            <h2>Registrar Ponto</h2>
+            <div class="clock" id="clock"></div>
+            
+            <div class="form-group">
+                <label>Selecione seu nome:</label>
+                <select id="funcionarioSelect">
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+
+            <button onclick="registrarPonto()">🕐 Bater Ponto Agora</button>
+
+            <div id="msgPonto" class="message"></div>
+        </div>
+
+        <!-- ABA: CADASTRAR FUNCIONÁRIO -->
+        <div id="cadastro" class="content">
+            <h2>Cadastrar Novo Funcionário</h2>
+            
+            <div class="form-group">
+                <label>Nome Completo:</label>
+                <input type="text" id="nome" placeholder="Ex: Fernando Alexandre">
+            </div>
+
+            <div class="form-group">
+                <label>Horário de Entrada:</label>
+                <input type="time" id="horario" value="08:00">
+            </div>
+
+            <button onclick="cadastrarFuncionario()">✅ Cadastrar</button>
+
+            <div id="msgCadastro" class="message"></div>
+        </div>
+
+        <!-- ABA: PAINEL RH -->
+        <div id="rh" class="content">
+            <h2>Painel do RH</h2>
+            
+            <h3>Funcionários Cadastrados</h3>
+            <table id="tabelaFuncionarios">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Horário Entrada</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="5">Carregando...</td></tr>
+                </tbody>
+            </table>
+
+            <h3 style="margin-top: 30px;">Pontos do Funcionário</h3>
+            <div class="form-group">
+                <label>Selecionar Funcionário:</label>
+                <select id="funcionarioRH" onchange="carregarPontos()">
+                    <option value="">Selecione...</option>
+                </select>
+            </div>
+
+            <table id="tabelaPontos">
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="2">Selecione um funcionário</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080/api';
+
+        // Relógio
+        function atualizarRelogio() {
+            const agora = new Date();
+            const horas = String(agora.getHours()).padStart(2, '0');
+            const minutos = String(agora.getMinutes()).padStart(2, '0');
+            const segundos = String(agora.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${horas}:${minutos}:${segundos}`;
+        }
+        setInterval(atualizarRelogio, 1000);
+        atualizarRelogio();
+
+        // Trocar abas
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.content');
+            
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+
+            if (tabName === 'registrar') carregarFuncionarios();
+            if (tabName === 'rh') carregarDadosRH();
+        }
+
+        // Carregar funcionários no select
+        async function carregarFuncionarios() {
+            try {
+                const response = await fetch(`${API_URL}/funcionarios`);
+                const funcionarios = await response.json();
+                
+                const select = document.getElementById('funcionarioSelect');
+                select.innerHTML = '<option value="">Selecione seu nome</option>';
+                
+                funcionarios.forEach(f => {
+                    select.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
+                });
+            } catch (error) {
+                console.error('Erro ao carregar funcionários:', error);
+            }
+        }
+
+        // Registrar ponto
+        async function registrarPonto() {
+            const funcionarioId = document.getElementById('funcionarioSelect').value;
+            const msgDiv = document.getElementById('msgPonto');
+
+            if (!funcionarioId) {
+                showMessage(msgDiv, 'Selecione um funcionário!', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/pontos/${funcionarioId}`, {
+                    method: 'POST'
+                });
+                const mensagem = await response.text();
+
+                if (mensagem.includes('BLOQUEADO') || mensagem.includes('ATENÇÃO')) {
+                    showMessage(msgDiv, mensagem, 'error');
+                } else if (mensagem.includes('ATRASO')) {
+                    showMessage(msgDiv, mensagem, 'warning');
+                } else {
+                    showMessage(msgDiv, mensagem, 'success');
+                }
+            } catch (error) {
+                showMessage(msgDiv, 'Erro ao registrar ponto!', 'error');
+            }
+        }
+
+        // Cadastrar funcionário
+        async function cadastrarFuncionario() {
+            const nome = document.getElementById('nome').value;
+            const horario = document.getElementById('horario').value;
+            const msgDiv = document.getElementById('msgCadastro');
+
+            if (!nome || !horario) {
+                showMessage(msgDiv, 'Preencha todos os campos!', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/funcionarios`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome, horarioEntrada: horario })
+                });
+
+                if (response.ok) {
+                    showMessage(msgDiv, 'Funcionário cadastrado com sucesso!', 'success');
+                    document.getElementById('nome').value = '';
+                    document.getElementById('horario').value = '08:00';
+                    carregarFuncionarios();
+                }
+            } catch (error) {
+                showMessage(msgDiv, 'Erro ao cadastrar!', 'error');
+            }
+        }
+
+        // Carregar dados do RH
+        async function carregarDadosRH() {
+            try {
+                const response = await fetch(`${API_URL}/funcionarios`);
+                const funcionarios = await response.json();
+
+                // Tabela de funcionários
+                const tbody = document.querySelector('#tabelaFuncionarios tbody');
+                tbody.innerHTML = '';
+                
+                funcionarios.forEach(f => {
+                    const status = f.bloqueado ? 
+                        '<span class="status bloqueado">BLOQUEADO</span>' : 
+                        '<span class="status ativo">ATIVO</span>';
+                    
+                    const btnDesbloquear = f.bloqueado ? 
+                        `<button class="btn-small" onclick="desbloquear(${f.id})">Desbloquear</button>` : 
+                        '-';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${f.id}</td>
+                            <td>${f.nome}</td>
+                            <td>${f.horarioEntrada}</td>
+                            <td>${status}</td>
+                            <td>${btnDesbloquear}</td>
+                        </tr>
+                    `;
+                });
+
+                // Select de funcionários
+                const select = document.getElementById('funcionarioRH');
+                select.innerHTML = '<option value="">Selecione...</option>';
+                funcionarios.forEach(f => {
+                    select.innerHTML += `<option value="${f.id}">${f.nome}</option>`;
+                });
+
+            } catch (error) {
+                console.error('Erro ao carregar dados RH:', error);
+            }
+        }
+
+        // Desbloquear funcionário
+        async function desbloquear(funcionarioId) {
+            try {
+                const response = await fetch(`${API_URL}/funcionarios/${funcionarioId}/desbloquear`, {
+                    method: 'PUT'
+                });
+                
+                if (response.ok) {
+                    alert('Funcionário desbloqueado com sucesso!');
+                    carregarDadosRH();
+                }
+            } catch (error) {
+                alert('Erro ao desbloquear!');
+            }
+        }
+
+        // Carregar pontos de um funcionário
+        async function carregarPontos() {
+            const funcionarioId = document.getElementById('funcionarioRH').value;
+            const tbody = document.querySelector('#tabelaPontos tbody');
+
+            if (!funcionarioId) {
+                tbody.innerHTML = '<tr><td colspan="2">Selecione um funcionário</td></tr>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/funcionarios/${funcionarioId}/pontos`);
+                const pontos = await response.json();
+
+                tbody.innerHTML = '';
+                
+                if (pontos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="2">Nenhum ponto registrado</td></tr>';
+                } else {
+                    pontos.forEach(p => {
+                        const data = new Date(p.dataHora);
+                        const dataFormatada = data.toLocaleString('pt-BR');
+                        const statusPonto = p.atrasado ? 
+                            '<span style="color: red; font-weight: bold;">ATRASADO</span>' : 
+                            '<span style="color: green; font-weight: bold;">NO HORÁRIO</span>';
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${dataFormatada}</td>
+                                <td>${statusPonto}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="2">Erro ao carregar pontos</td></tr>';
+            }
+        }
+
+        // Função para exibir mensagens
+        function showMessage(element, text, type) {
+            element.textContent = text;
+            element.className = `message ${type}`;
+            element.style.display = 'block';
+            setTimeout(() => element.style.display = 'none', 5000);
+        }
+
+        // Carregar funcionários ao iniciar
+        carregarFuncionarios();
+    </script>
+</body>
+</html>
